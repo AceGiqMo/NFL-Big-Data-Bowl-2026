@@ -1,0 +1,11 @@
+# Local data and generated artifacts
+data/train/
+data/processed/
+checkpoints/
+outputs/
+*.pkl
+*.pt
+*.pth
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
