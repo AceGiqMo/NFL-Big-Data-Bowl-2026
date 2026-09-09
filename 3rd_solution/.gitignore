@@ -2,7 +2,10 @@
 data/train/
 data/processed/
 checkpoints/
-outputs/
+outputs/*
+!outputs/training_curves.png
+!outputs/trajectory.png
+!outputs/training_history.csv
 *.pkl
 *.pt
 *.pth

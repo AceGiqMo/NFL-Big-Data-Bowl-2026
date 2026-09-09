@@ -1,107 +1,90 @@
-# NFL Big Data Bowl 2026 — 3rd Place Solution: minimal educational reproduction
+# NFL Big Data Bowl 2026 — 3rd Place Solution Reproduction
 
-This is a **minimal reproduction for a university Practical ML/DL project**, not a leaderboard clone.
+Reproduction of the core architecture and training approach described in the
+public 3rd-place write-up of the *NFL Big Data Bowl 2026 — Prediction*
+Kaggle competition ("PreTrain-FineTune: Spatio-Temporal Transformer with
+Multi-Aux-Loss for NFL Trajectory Forecasting"). Given pre-throw player
+tracking data, the model predicts each targeted player's (x, y) trajectory
+after the ball is thrown.
 
-It implements the core ideas stated in the public 3rd-place Kaggle write-up:
-- published feature engineering;
-- 22 fixed player slots, offense/defense ordered by distance to passer at the first frame;
-- dual-path spatio-temporal attention (temporal per-player + spatial inter-player);
-- player/time embeddings and masks;
-- future displacement (Δx, Δy) prediction;
-- primary temporal-weighted Huber-style loss plus inter-frame and endpoint auxiliary losses;
-- AdamW, cosine LR schedule and gradient clipping.
+See `REPORT.md` for the full methodology, validation, and results.
 
-The original competition solution additionally used 2018 pretraining, fine-tuning, augmentations, EMA, TTA, 7-fold CV and ensembling. Those are intentionally left out of the minimal version so the architecture can be understood and trained in a course project.
+## Approach
 
-## 0. Folder layout
+- 22 fixed player slots per play (offense before defense, both ordered by
+  distance to the passer at the first observed frame), so the model sees a
+  consistent input layout across plays.
+- A dual-path attention encoder: temporal attention lets each player attend
+  over its own observed frames; spatial attention lets players at the same
+  frame attend to each other.
+- The model predicts future displacement (Δx, Δy) from the last observed
+  position, supervised with a time-decayed Huber loss plus velocity/
+  acceleration smoothness terms.
+- Two auxiliary heads — next-frame displacement and running endpoint
+  estimate — provide additional training signal.
+- Left-padding and explicit time/player masks handle variable-length
+  observation windows and missing players.
+
+## Scope
+
+This repository implements the documented core architecture and multi-task
+loss design. It does not include the additional techniques used in the
+original leaderboard submission — 2018-season pretraining, augmentation,
+EMA, test-time augmentation, k-fold cross-validation, and ensembling — which
+are out of scope for this project.
+
+## Repository structure
 
 ```text
-data/train/input_2023_w01.csv
-...
-data/train/output_2023_w01.csv
-
-src/features.py
-src/preprocess.py
-src/model.py
-src/losses.py
-src/train.py
-src/plot_trajectory.py
-notebooks/eda.py
+data/train/            # Kaggle CSVs (not committed — see data/README.md)
+notebooks/eda.py        # exploratory data analysis
+notebooks/01_eda.ipynb
+src/features.py          # feature engineering
+src/preprocess.py        # builds fixed-size (T, 22, F) tensors per play
+src/model.py             # STTransformer: dual temporal/spatial attention
+src/losses.py            # main + auxiliary losses
+src/train.py             # training loop, validation, checkpointing
+src/baseline.py          # stationary / constant-velocity baselines
+src/plot_training.py     # training/validation curves
+src/plot_trajectory.py   # per-player trajectory visualization
 ```
 
-## 1. Download data
-
-Download the train folder from Kaggle and put the CSVs under `data/train/`.
-
-## 2. EDA
+## Setup
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+Place the Kaggle `input_2023_wXX.csv` / `output_2023_wXX.csv` files under
+`data/train/` (see `data/README.md`).
+
+## Usage
+
+```bash
+# 1. Exploratory data analysis
 python notebooks/eda.py --data-dir data/train --week 1 --output-dir outputs/eda
-```
 
-## 3. Build a small training set
+# 2. Build a processed training set
+python src/preprocess.py --data-dir data/train --weeks 1 --window 20 \
+    --max-plays 1000 --output data/processed/week1_1000.pkl
 
-Start small:
-
-```bash
-python src/preprocess.py --data-dir data/train --weeks 1 --window 20 --max-plays 1000 --output data/processed/week1_1000.pkl
-```
-
-## 4. Compare simple baselines
-
-```bash
+# 3. Baselines (stationary / constant-velocity)
 python src/baseline.py --data data/processed/week1_1000.pkl
+
+# 4. Train
+python src/train.py --data data/processed/week1_1000.pkl --epochs 10 \
+    --batch-size 8 --hidden 192 --layers 2 --output checkpoints/model.pt
+
+# 5. Training curves
+python src/plot_training.py --history outputs/training_history.csv \
+    --output outputs/training_curves.png
+
+# 6. Visualize a prediction
+python src/plot_trajectory.py --data data/processed/week1_1000.pkl \
+    --checkpoint checkpoints/model.pt --index 0 --player-slot 0
 ```
 
-The validation split is grouped by `game_id`. The stationary baseline predicts zero future displacement; the constant-velocity baseline extrapolates the final observed velocity at 10 Hz.
-
-## 5. Smoke-test training
-
-```bash
-python src/train.py --data data/processed/week1_1000.pkl --epochs 3 --batch-size 8 --hidden 128 --layers 1 --output checkpoints/smoke.pt
-```
-
-Then use a larger configuration:
-
-```bash
-python src/preprocess.py --data-dir data/train --weeks 1 2 3 --window 20 --max-plays 5000 --output data/processed/train_small.pkl
-python src/train.py --data data/processed/train_small.pkl --epochs 10 --batch-size 8 --hidden 192 --layers 2 --output checkpoints/third_place_minimal.pt
-```
-
-## 6. Visualize a prediction
-
-```bash
-python src/plot_trajectory.py --data data/processed/train_small.pkl --checkpoint checkpoints/third_place_minimal.pt --index 0 --player-slot 0
-```
-
-## What to say in the report
-
-1. Input is a sequence of tracking frames for one play.
-2. Up to 22 players are represented in fixed slots.
-3. Temporal attention models how each player's motion evolves.
-4. Spatial attention models interactions between players at the same time.
-5. The model predicts future Δx/Δy; adding them to the last observed coordinates gives future x/y.
-6. Auxiliary losses encourage temporal consistency and endpoint awareness.
-
-Do not claim this is an exact reproduction of the Kaggle leaderboard model. It is a transparent educational reproduction of its core architecture.
-
-## Important implementation notes
-
-This reproduction intentionally keeps the model educational. The public 3rd-place write-up does not expose every internal implementation detail, so this project reproduces the documented architectural ideas rather than claiming byte-for-byte parity.
-
-### Fixes compared with the first draft
-
-- Validation is split by `game_id`, avoiding train/validation leakage between plays from the same game.
-- Input sequences shorter than the fixed window are explicitly left-padded and have a `time_mask`.
-- Main loss uses only `player_to_predict` targets.
-- Auxiliary inter-frame and endpoint losses respect both time and player masks.
-- Endpoint supervision uses each target player's own last valid future frame, rather than the batch-padded final frame.
-- Validation RMSE is aggregated globally from total squared error / total valid coordinates, so variable-length horizons are weighted correctly.
-- `src/baseline.py` provides stationary and constant-velocity baselines for a meaningful comparison.
-- The main loss includes the documented exponential time decay and small velocity/acceleration smoothness terms.
-- The target is future displacement from the last observed coordinates, matching the solution's described formulation.
-- A Jupyter EDA notebook plus a compact EDA script were added.
-
-### What the EDA should answer
-
-The EDA is deliberately small and model-oriented. It checks shapes/missingness, number of players and frames per play, prediction horizon, roles/positions, motion distributions, an example multi-player trajectory, and receiver-to-ball-landing distance. These findings justify sequence modeling, fixed player slots, masks, and temporal/spatial attention.
+Scale to more weeks/plays by passing additional `--weeks` and a larger
+`--max-plays` to `src/preprocess.py`.
