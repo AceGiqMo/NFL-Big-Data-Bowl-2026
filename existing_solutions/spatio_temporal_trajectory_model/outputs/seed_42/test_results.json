@@ -1,0 +1,23 @@
+{
+  "exp": "seed_42",
+  "n_test_plays": 750,
+  "results": {
+    "proposed (EMA)": {
+      "rmse": 0.8167858486876475,
+      "ci_lo": 0.7092839828792012,
+      "ci_hi": 0.9416871218900092
+    },
+    "constant-velocity": {
+      "rmse": 4.248426166300414,
+      "ci_lo": 3.96487151325277,
+      "ci_hi": 4.523046265332106
+    }
+  },
+  "role_rmse": {
+    "proposed": {
+      "Targeted Receiver": 0.3199875690092643,
+      "Defensive Coverage": 0.45959108048411645
+    }
+  },
+  "best_epoch": 18
+}
