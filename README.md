@@ -14,8 +14,9 @@ hastnet/
 ├── figures/           # all plots per experiment
 ├── checkpoints/       # <exp>_best.pt (EMA weights)
 ├── tuning/            # tuning checkpoints, figures, tuning_results.json
-├── hastnet_artifacts.zip          # baseline run artifacts
-└── hastnet_tuning_artifacts.zip   # tuning run artifacts
+├── notebooks/         # Kaggle-notebook if your local machine does not have enough power
+├── hastnet_artifacts.zip          # baseline run artifacts (ONLY AFTER TRAINING ON KAGGLE NOTEBOOK)
+└── hastnet_tuning_artifacts.zip   # tuning run artifacts (ONLY AFTER TRAINING ON KAGGLE NOTEBOOK)
 ```
 
 ## 1. Reference solution
@@ -144,16 +145,7 @@ class Config:
 
 ## 4. Testing and reproducing
 
-### 4.1 Data
-
-Place the competition CSVs into `data/` (Kaggle API). Expected files:
-`data/input_2023_w01.csv … data/output_2023_w18.csv`.
-
-```bash
-pip install kaggle
-kaggle competitions download -c nfl-big-data-bowl-2026-prediction -p data
-unzip data/nfl-big-data-bowl-2026-prediction.zip -d data
-```
+### 4.1 Training on local machine
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -169,20 +161,9 @@ python train.py --mode train --seed 42
 python train.py --mode tune --n-trials 3
 ```
 
-```py
-# shape/NaN self-test before spending GPU time
-import torch
-from model import HASTNet, Config, HASTDataset, collate, hast_loss
+### 4.2 Training on Kaggle
 
-cfg = Config()
-ds = HASTDataset(idx_df, cfg, cfg.train_weeks, PREP, train=True)
-batch = collate([ds[i] for i in range(4)])
-out = HASTNet(cfg)(batch)
-loss, parts = hast_loss(out, batch, cfg)
-loss.backward()
-assert out["pos"].shape == batch["pos"].shape
-assert torch.isfinite(out["pos"]).all() and torch.isfinite(loss).all()
-```
+Place the `notebooks/kaggle_training_w_tuning.ipynb` to the environment of the competition `https://www.kaggle.com/competitions/nfl-big-data-bowl-2026-prediction`. It already has the necessary data. Use accelerator **T4** (NOT **P100**)
 
 ## 5. Results
 
