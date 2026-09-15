@@ -1,0 +1,52 @@
+{
+  "train_weeks": [
+    1
+  ],
+  "val_weeks": [
+    1
+  ],
+  "test_weeks": [
+    1
+  ],
+  "max_input_frames": 80,
+  "max_output_frames": 96,
+  "min_output_frames": 5,
+  "d_model": 128,
+  "n_heads": 8,
+  "n_v1_blocks": 4,
+  "n_pre_spatial": 2,
+  "n_v2_blocks": 2,
+  "n_control": 8,
+  "rnn_hidden": 96,
+  "dropout": 0.1,
+  "dist_buckets": 16,
+  "dist_max": 60.0,
+  "fourier_freqs": 4,
+  "seed": 42,
+  "epochs": 1,
+  "batch_size": 32,
+  "lr": 0.0003,
+  "weight_decay": 0.01,
+  "warmup_steps": 500,
+  "huber_delta": 0.35,
+  "ema_decay": 0.995,
+  "grad_clip": 1.0,
+  "patience": 2,
+  "amp": false,
+  "use_muon": false,
+  "w_pos": 1.0,
+  "w_end": 0.5,
+  "w_delta": 0.5,
+  "w_acc": 0.1,
+  "w_nll": 0.1,
+  "p_flip": 0.5,
+  "p_rot": 0.5,
+  "rot_deg": 10.0,
+  "p_shift": 0.5,
+  "shift_yd": 3.0,
+  "p_fshift": 0.3,
+  "n_bootstrap": 10,
+  "bootstrap_block": 8,
+  "num_workers": 2,
+  "exp_name": "smoke_test"
+}

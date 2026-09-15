@@ -145,8 +145,20 @@ class Config:
 
 ## 4. Testing and reproducing
 
-### 4.1 Training on local machine
+### 4.1 Data
 
+Place the competition CSVs into `data/` (Kaggle API):
+
+```bash
+pip install kaggle
+kaggle competitions download -c nfl-big-data-bowl-2026-prediction -p data
+unzip data/nfl-big-data-bowl-2026-prediction.zip "train" -d data   # Linux/macOS
+# Windows PowerShell: tar -xf data\nfl-big-data-bowl-2026-prediction.zip -C data "train"
+```
+
+### 4.2 Training on local machine
+
+#### Linux/macOS
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt        # torch, numpy, pandas, matplotlib, tqdm
@@ -161,7 +173,24 @@ python train.py --mode train --seed 42
 python train.py --mode tune --n-trials 3
 ```
 
-### 4.2 Training on Kaggle
+#### Windows
+```powershell
+py -3.14 -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+
+# quick pipeline self-test: 10 plays from week 01, 1 epoch
+python train.py --mode smoke_test
+
+# full training + evaluation + figures + artifacts zip
+python train.py --mode train --seed 42
+
+# hyperparameter tuning (RandomizedSearch) + tuning artifacts zip
+python train.py --mode tune --n-trials 3
+
+```
+
+### 4.3 Training on Kaggle
 
 Place the `notebooks/kaggle_training_w_tuning.ipynb` to the environment of the competition `https://www.kaggle.com/competitions/nfl-big-data-bowl-2026-prediction`. It already has the necessary data. Use accelerator **T4** (NOT **P100**)
 
