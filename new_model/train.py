@@ -168,5 +168,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    # mv hastnet_out/checkpoints hastnet_out/outputs hastnet_out/figures hastnet_out/tuning ./
-    # rm -rf hastnet_out

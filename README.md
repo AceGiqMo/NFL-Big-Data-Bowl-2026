@@ -171,6 +171,10 @@ python train.py --mode train --seed 42
 
 # hyperparameter tuning (RandomizedSearch) + tuning artifacts zip
 python train.py --mode tune --n-trials 3
+
+# Extract the results
+mv hastnet_out/checkpoints hastnet_out/outputs hastnet_out/figures hastnet_out/tuning ./
+rm -rf hastnet_out
 ```
 
 #### Windows
@@ -188,6 +192,8 @@ python train.py --mode train --seed 42
 # hyperparameter tuning (RandomizedSearch) + tuning artifacts zip
 python train.py --mode tune --n-trials 3
 
+# Extract the results
+Move-Item -Path hastnet_out\checkpoints, hastnet_out\outputs, hastnet_out\figures, hastnet_out\tuning -Destination .\ ; Remove-Item -Recurse -Force hastnet_out
 ```
 
 ### 4.3 Training on Kaggle
