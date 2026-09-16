@@ -139,39 +139,36 @@ The results in Section 7 were produced with:
 
 ```bash
 python notebooks/eda.py --data-dir data/train --week 1 --output-dir outputs/eda
-python src/preprocess.py --data-dir data/train --weeks 1 2 3 4 5 --window 20 \
-    --max-plays 20000 --output data/processed/weeks1-5.pkl
-python src/baseline.py --data data/processed/weeks1-5.pkl
-python src/train.py --data data/processed/weeks1-5.pkl --epochs 10 \
+python src/preprocess.py --data-dir data/train --weeks 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 \
+    --window 20 --output data/processed/weeks-all.pkl
+python src/baseline.py --data data/processed/weeks-all.pkl
+python src/train.py --data data/processed/weeks-all.pkl --epochs 10 \
     --batch-size 8 --hidden 192 --layers 2 --output checkpoints/model.pt
 python src/plot_training.py --history outputs/training_history.csv \
     --output outputs/training_curves.png
-python src/plot_trajectory.py --data data/processed/weeks1-5.pkl \
+python src/plot_trajectory.py --data data/processed/weeks-all.pkl \
     --checkpoint checkpoints/model.pt --index 0 --player-slot 0 \
     --output outputs/trajectory.png
 ```
-
-Scaling to more data — additional weeks via `--weeks 1 2 3 ...` — is
-straightforward and expected to improve validation RMSE further.
 
 ## 7. Results
 
 | Model | Validation RMSE (yards) |
 |---|---|
-| Stationary baseline | 4.077 |
-| Constant-velocity baseline | 5.565 |
-| STTransformer (this repository) | 1.365 |
+| Stationary baseline | 4.351 |
+| Constant-velocity baseline | 5.958 |
+| STTransformer (this repository) | 0.831 |
 
-Trained on weeks 1–5 (4,094 plays, 878 held out for validation), 10 epochs,
-hidden size 192, 2 layers. The model outperforms the stationary baseline by
-~67% and the constant-velocity baseline by ~75%. With more training data the
-gap between the model and both baselines widened substantially compared to
-training on a single week (where the model led the stationary baseline by
-only ~19%), consistent with the model needing sufficient data to learn
-player-specific and route-specific movement patterns that a fixed-rule
-baseline cannot capture. The constant-velocity baseline remains worse than
-the stationary one, for the same reason noted with the single-week run:
-players frequently change speed and direction while the ball is in the air.
+Trained on all 18 weeks of the 2023 season (2,765 plays held out for
+validation), 10 epochs, hidden size 192, 2 layers. The model outperforms the
+stationary baseline by ~81% and the constant-velocity baseline by ~86%.
+Validation RMSE improved consistently as more data was added: 4.020 on a
+single week, 1.365 on five weeks, 0.831 on the full 18 weeks — the model
+keeps extracting more signal from player-specific and route-specific
+movement patterns as training data grows, while the fixed-rule baselines
+stay flat. The constant-velocity baseline remains worse than the stationary
+one throughout, for the reason noted earlier: players frequently change
+speed and direction while the ball is in the air.
 
 Training/validation curves: `outputs/training_curves.png`. Example
 predicted vs. actual trajectory: `outputs/trajectory.png`.
