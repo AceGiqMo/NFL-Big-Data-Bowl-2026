@@ -1,0 +1,6 @@
+# requirements.txt (pin exact versions you verified)
+torch==2.10.0
+numpy==1.26.4
+pandas==2.2.2
+matplotlib==3.9.0
+tqdm==4.66.4

@@ -1,0 +1,14 @@
+# Local data and generated artifacts
+data/train/
+data/processed/
+checkpoints/
+outputs/*
+!outputs/training_curves.png
+!outputs/trajectory.png
+!outputs/training_history.csv
+*.pkl
+*.pt
+*.pth
+*.pyc
+__pycache__/
+.ipynb_checkpoints/
